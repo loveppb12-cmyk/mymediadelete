@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -11,9 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Bot configuration
-BOT_TOKEN = "8582239371:AAHWHQCkkDfwAtdV6wVOlCJv17rAZBMpycI"
-API_ID = 20284828
-API_HASH = "a980ba25306901d5c9b899414d6a9ab7"
+BOT_TOKEN = os.environ.get('BOT_TOKEN', "8582239371:AAHWHQCkkDfwAtdV6wVOlCJv17rAZBMpycI")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /start is issued."""
@@ -29,33 +28,18 @@ async def delete_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = message.chat_id
         message_id = message.message_id
         
-        # List of media types to delete
-        media_types = [
-            filters.PHOTO, filters.VIDEO, filters.STICKER, 
-            filters.Animation.ALL, filters.AUDIO, filters.VOICE,
-            filters.Document.ALL
-        ]
+        # Delete the media message
+        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+        logger.info(f"Deleted media message {message_id} from chat {chat_id}")
         
-        # Check if the message contains any media
-        is_media = any(
-            await media_type.check_update(update) 
-            for media_type in media_types
-        )
-        
-        if is_media:
-            # Delete the media message
-            await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
-            logger.info(f"Deleted media message {message_id} from chat {chat_id}")
-            
-            # Optional: Send a warning message (you can remove this if you don't want it)
+        # Optional: Send a warning message (you can remove this if you don't want it)
+        try:
             warning_msg = await message.reply_text("❌ Media messages are not allowed here!")
-            
             # Delete the warning message after 3 seconds
-            await context.bot.delete_message(
-                chat_id=chat_id, 
-                message_id=warning_msg.message_id, 
-                delay=3
-            )
+            await asyncio.sleep(3)
+            await context.bot.delete_message(chat_id=chat_id, message_id=warning_msg.message_id)
+        except Exception as e:
+            logger.error(f"Error with warning message: {e}")
             
     except Exception as e:
         logger.error(f"Error deleting message: {e}")
@@ -72,13 +56,14 @@ def main():
     # Add handlers
     application.add_handler(CommandHandler("start", start))
     
-    # Add media handler - this will catch all media types
-    application.add_handler(MessageHandler(
-        filters.PHOTO | filters.VIDEO | filters.STICKER | 
-        filters.Animation.ALL | filters.AUDIO | filters.VOICE |
-        filters.Document.ALL,
-        delete_media
-    ))
+    # Add media handler - this will catch all media types with correct filter names
+    media_filter = (
+        filters.PHOTO | filters.VIDEO | filters.Sticker.ALL | 
+        filters.ANIMATION | filters.AUDIO | filters.VOICE |
+        filters.Document.ALL
+    )
+    
+    application.add_handler(MessageHandler(media_filter, delete_media))
     
     # Add error handler
     application.add_error_handler(error_handler)
@@ -86,11 +71,13 @@ def main():
     # Start the Bot
     if os.environ.get('DYNO'):  # Running on Heroku
         port = int(os.environ.get('PORT', 8443))
+        app_name = os.environ.get('HEROKU_APP_NAME', 'your-app-name')
+        
         application.run_webhook(
             listen="0.0.0.0",
             port=port,
             url_path=BOT_TOKEN,
-            webhook_url=f"https://your-app-name.herokuapp.com/{BOT_TOKEN}"
+            webhook_url=f"https://{app_name}.herokuapp.com/{BOT_TOKEN}"
         )
     else:  # Running locally
         application.run_polling()
