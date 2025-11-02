@@ -56,7 +56,7 @@ def main():
     # Add handlers
     application.add_handler(CommandHandler("start", start))
     
-    # Add media handler - this will catch all media types with correct filter names
+    # Add media handler - this will catch all media types
     media_filter = (
         filters.PHOTO | filters.VIDEO | filters.Sticker.ALL | 
         filters.ANIMATION | filters.AUDIO | filters.VOICE |
@@ -68,19 +68,9 @@ def main():
     # Add error handler
     application.add_error_handler(error_handler)
 
-    # Start the Bot
-    if os.environ.get('DYNO'):  # Running on Heroku
-        port = int(os.environ.get('PORT', 8443))
-        app_name = os.environ.get('HEROKU_APP_NAME', 'your-app-name')
-        
-        application.run_webhook(
-            listen="0.0.0.0",
-            port=port,
-            url_path=BOT_TOKEN,
-            webhook_url=f"https://{app_name}.herokuapp.com/{BOT_TOKEN}"
-        )
-    else:  # Running locally
-        application.run_polling()
+    # Start the Bot using polling (simpler for Heroku)
+    logger.info("Starting bot with polling...")
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
