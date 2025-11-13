@@ -14,27 +14,28 @@ logger = logging.getLogger(__name__)
 # Bot configuration
 BOT_TOKEN = os.environ.get('BOT_TOKEN', "7877704419:AAHxtHpBG5_PT0o7KQeaqJjAcvQuQ7H-GfI")
 
-# User ID that is allowed to send media (will not be deleted)
-ALLOWED_USER_ID = 7907871597
+# User IDs that are allowed to send media (will not be deleted)
+ALLOWED_USER_IDS = [7907871597, 7694649216]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /start is issued."""
+    allowed_users = ", ".join(str(user_id) for user_id in ALLOWED_USER_IDS)
     await update.message.reply_text(
         "🤖 Bot is active!\n"
-        "I will automatically delete all media messages including photos, videos, stickers, GIFs, and audio. I am desgin by @kingXkingz.\n"
-        f"Except for user ID: {ALLOWED_USER_ID}"
+        "I will automatically delete all media messages including photos, videos, stickers, GIFs, and audio. I am design by @kingXkingz.\n"
+        f"Except for user IDs: {allowed_users}"
     )
 
 async def delete_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Delete any media message instantly, except for allowed user."""
+    """Delete any media message instantly, except for allowed users."""
     try:
         message = update.message
         user_id = message.from_user.id
         chat_id = message.chat_id
         message_id = message.message_id
         
-        # Check if user is the allowed user
-        if user_id == ALLOWED_USER_ID:
+        # Check if user is in the allowed users list
+        if user_id in ALLOWED_USER_IDS:
             logger.info(f"Allowed user {user_id} sent media - not deleting")
             return
         
@@ -80,7 +81,8 @@ def main():
 
     # Start the Bot using polling
     logger.info("Starting bot with polling...")
-    logger.info(f"Media deletion disabled for user ID: {ALLOWED_USER_ID}")
+    allowed_users = ", ".join(str(user_id) for user_id in ALLOWED_USER_IDS)
+    logger.info(f"Media deletion disabled for user IDs: {allowed_users}")
     application.run_polling()
 
 if __name__ == '__main__':
