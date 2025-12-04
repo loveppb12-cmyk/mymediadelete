@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 BOT_TOKEN = os.environ.get('BOT_TOKEN', "7877704419:AAHxtHpBG5_PT0o7KQeaqJjAcvQuQ7H-GfI")
 
 # User IDs that are allowed to send media (will not be deleted)
-ALLOWED_USER_IDS = [7907871597, 7694649216]
+ALLOWED_USER_IDS = [7907871597, 7476159893]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /start is issued."""
