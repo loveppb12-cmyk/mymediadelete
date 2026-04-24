@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Bot configuration
-BOT_TOKEN = os.environ.get('BOT_TOKEN', "824Gai_dWZglJs")
+BOT_TOKEN = os.environ.get('BOT_TOKEN', "8249542149:AAE89i9unqcTmoTTHRv1FrYXLOgHUEmivdQ")
 
 # User IDs that are allowed to send media (will not be deleted)
 ALLOWED_USER_IDS = [7476159893, 6559714184]
